@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# Smart pre-commit hook leveraging GitHub Copilot CLI for AI-powered code review with playful feedback
+# Ensure GitHub CLI and Copilot CLI extension are installed
+# Add colorful output and graphics
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+YELLOW="\033[0;33m"
+BLUE="\033[0;34m"
+NC="\033[0m" # No Color
+
+# Function to display a welcome banner
+print_welcome_banner() {
+  echo -e "${BLUE}====================================================================================${NC}"
+  echo -e "${YELLOW}   ____    ____   __  __  __  __  _  ______  _   ____   _____   ______   _     _ ${NC}"
+  echo -e "${YELLOW}  / ___|  / __ \ |  \/  ||  \/  || ||__  __|| | |  _ \ | ____| /  __  \ | \   | |${NC}"
+  echo -e "${YELLOW} | |     | |  | || |\/| || |\/| || |   | |  | | | | | ||  _|   | |__| | | |\  | |${NC}"
+  echo -e "${YELLOW} | |___  | |__| || |  | || |  | || |   | |  | | | |_| || |___  |  __  | | | \ | |${NC}"
+  echo -e "${YELLOW}  \____|  \____/ |_|  |_||_|  |_||_|   |_|  |_| |____/ |_____| |_|  |_| |_|  \|_|${NC}"
+  echo -e ""                                                    
+  echo -e "${BLUE}====================================================================================${NC}"
+  echo -e "${GREEN}                       🎭 Welcome to Commitedian 🎭                                ${NC}"
+  echo -e "${BLUE}====================================================================================${NC}"
+}
+
+# Function to display a success graphic
+print_success_graphic() {
+  echo -e "${BLUE} __     __  ______  __     __   _  ${NC}"
+  echo -e "${BLUE}  \ \_/ /  /  __  \  \ \_/ /   | | ${NC}"
+  echo -e "${BLUE}   \   /   | |__| |   \   /    |_| ${NC}"
+  echo -e "${BLUE}    | |    |  __  |    | |      _  ${NC}"
+  echo -e "${BLUE}    |_|    |_|  |_|    |_|     |_| ${NC}"
+  echo -e ""                                                    
+  echo -e "${GREEN}======= 🎉🎉🎉 SUCCESS! 🎉🎉🎉 ====== ${NC}"
+  echo -e "${GREEN}Your code is clean and ready to commit!${NC}"
+}
+
+# Function to display a failure graphic
+print_failure_graphic() {
+  echo -e "${RED}             ____    ____   ____     ___     _  ${NC}"
+  echo -e "${RED}            / __ \  / __ \ |  _ \ | |  |_|  | | ${NC}"
+  echo -e "${RED}           | |  | || |  | || |_| |   \      |_| ${NC}"
+  echo -e "${RED}           | |__| || |__| || __ /  _  \ _    _  ${NC}"
+  echo -e "${RED}            \____/  \____/ |_|    | |__| |  |_| ${NC}"
+  echo -e ""            
+  echo -e "${YELLOW}============== 💥💥💥 PLEASE TRY AGAIN! 💥💥💥 ============== ${NC}"
+  echo -e "${RED}Issues detected in your code. Please fix them before committing.${NC}"                                                  
+}
+
+print_welcome_banner
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+  echo -e "${YELLOW}jq is not installed. Installing it for you...${NC}"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    brew install jq
+  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    sudo apt update && sudo apt install -y jq
+  else
+    echo -e "${RED}Unsupported OS. Please install jq manually: https://stedolan.github.io/jq/download/${NC}"
+    exit 1
+  fi
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to install jq. Please install it manually: https://stedolan.github.io/jq/download/${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}jq installed successfully!${NC}"
+fi
+
+# Install GitHub CLI if not present
+if ! command -v gh &> /dev/null; then
+  echo -e "${YELLOW}GitHub CLI not found. Installing it for you...${NC}"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    brew install gh
+  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    sudo apt update && sudo apt install -y gh || curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install -y gh
+  else
+    echo -e "${RED}Unsupported OS. Please install GitHub CLI manually: https://cli.github.com/${NC}"
+    exit 1
+  fi
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to install GitHub CLI. Please install it manually: https://cli.github.com/${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}GitHub CLI installed successfully!${NC}"
+fi
+
+# Ensure GitHub CLI is authenticated
+if ! gh auth status &> /dev/null; then
+  echo -e "${YELLOW}You are not logged into GitHub CLI. Initiating login...${NC}"
+  gh auth login
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to authenticate with GitHub CLI. Please try again.${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}Successfully authenticated with GitHub CLI!${NC}"
+fi
+
+# Install Copilot CLI extension if not present
+if ! gh extension list | grep -q copilot; then
+  echo -e "${YELLOW}GitHub Copilot CLI extension not found. Installing it for you...${NC}"
+  gh extension install github/gh-copilot
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to install GitHub Copilot CLI extension. Please install it manually: https://docs.github.com/en/copilot/how-tos/use-copilot-for-common-tasks/use-copilot-in-the-cli${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}GitHub Copilot CLI extension installed successfully!${NC}"
+fi
+
+# Ensure required sound files are installed
+sound_dir="$(dirname "$0")/sounds"
+if [ ! -d "$sound_dir" ]; then
+  echo -e "${YELLOW}Sound directory not found. Creating and downloading required sounds...${NC}"
+  mkdir -p "$sound_dir"
+  curl -o "$sound_dir/sitcom_laugh.aiff" https://example.com/sounds/sitcom_laugh.aiff
+  curl -o "$sound_dir/thunderstorm.aiff" https://example.com/sounds/thunderstorm.aiff
+  curl -o "$sound_dir/whoops.aiff" https://example.com/sounds/whoops.aiff
+  curl -o "$sound_dir/generic_name.aiff" https://example.com/sounds/generic_name.aiff
+  curl -o "$sound_dir/positive.aiff" https://example.com/sounds/positive.aiff
+  echo -e "${GREEN}All sound files downloaded successfully!${NC}"
+fi
+
+# Function to play sound and display a message
+play_sound_and_message() {
+  local sound_file=$1
+  local message=$2
+  if [ -f "$sound_file" ]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      afplay "$sound_file" &
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      aplay "$sound_file" &
+    else
+      echo -e "${YELLOW}Audio playback is not supported on this platform.${NC}"
+    fi
+  else
+    echo -e "${RED}Sound file $sound_file not found or invalid. Skipping playback.${NC}"
+  fi
+  echo -e "${BLUE}$message${NC}"
+}
+
+# Function to handle issue types dynamically
+handle_issue_type() {
+  local issue_type=$1
+  local file=$2
+  local sound_file=$3
+
+  if echo "$copilot_output" | jq -e --arg type "$issue_type" '.issue_type == $type' > /dev/null; then
+local message=$(echo "$copilot_output" | jq -r '.playful_message')
+    play_sound_and_message "$sound_file" "$message"
+    print_failure_graphic
+    exit 1
+  fi
+}
+prompt="Review this file for the following issues: 
+    1. Weird debug logs (e.g., \"hello from ABC!\") or too many debug print statements (as if a debugger never existed). 
+    2. Hard-coded secrets (e.g., passwords, API keys). 
+    3. Typos or grammatical errors. 
+    4. Generic variable or function names (e.g., temp, data). 
+    5. Any other potential issues or improvements. 
+    For each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the file being reviewed."
+copilot_output=$(gh copilot suggest "$prompt")
+# Analyze all staged files
+staged_files=$(git diff --cached --name-only)
+
+if [ -z "$staged_files" ]; then
+  echo -e "${YELLOW}No files staged for commit. Skipping analysis.${NC}"
+  exit 0
+fi
+
+declare -A issue_sounds=(
+  ["debug log"]="$sound_dir/sitcom_laugh.aiff"
+  ["hard-coded secret"]="$sound_dir/thunderstorm.aiff"
+  ["typo"]="$sound_dir/whoops.aiff"
+  ["generic name"]="$sound_dir/generic_name.aiff"
+if echo "$copilot_output" | jq empty > /dev/null 2>&1; then
+    for issue_type in "${!issue_sounds[@]}"; do
+      handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
+    done
+else
+    echo -e "${RED}Error: Invalid JSON received from GitHub Copilot CLI for $file.${NC}"
+    exit 1
+fi
+
+for file in $staged_files; do
+  if [ -f "$file" ]; then
+    echo -e "${BLUE}Running GitHub Copilot CLI on $file...${NC}"
+   
+     copilot_output=$(gh copilot suggest "Review this file for the following issues: \n1. Weird debug logs (e.g., "hello from ABC!") or too many debug print statements (as if a debugger never existed). \n2. Hard-coded secrets (e.g., passwords, API keys). \n3. Typos or grammatical errors. \n4. Generic variable or function names (e.g., temp, data). \n5. Any other potential issues or improvements. \nFor each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the file being reviewed.")
+for issue_type in "${!issue_sounds[@]}"; do
+      handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
+    done
+
+    # If no issues are found, play a positive sound
+    play_sound_and_message "$sound_dir/positive.aiff" "Great job! No issues found in $file."
+    print_success_graphic
+  fi
+done
+
+# Allow the commit to proceed
+exit 0
