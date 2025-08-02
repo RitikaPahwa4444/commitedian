@@ -131,9 +131,17 @@ play_sound_and_message() {
   local message=$2
   if [ -f "$sound_file" ]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
-      afplay "$sound_file" &
+      if command -v afplay &> /dev/null; then
+        afplay "$sound_file" &
+      else
+        echo -e "${YELLOW}afplay is not installed. Skipping audio playback.${NC}"
+      fi
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      aplay "$sound_file" &
+      if command -v aplay &> /dev/null; then
+        aplay "$sound_file" &
+      else
+        echo -e "${YELLOW}aplay is not installed. Skipping audio playback.${NC}"
+      fi
     else
       echo -e "${YELLOW}Audio playback is not supported on this platform.${NC}"
     fi
@@ -165,7 +173,7 @@ prompt="Review this file for the following issues:
     For each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the file being reviewed."
 copilot_output=$(gh copilot suggest "$prompt")
 # Analyze all staged files
-staged_files=$(git diff --cached --name-only)
+staged_files=$(git diff --cached --name-only -z)
 
 if [ -z "$staged_files" ]; then
   echo -e "${YELLOW}No files staged for commit. Skipping analysis.${NC}"
@@ -178,21 +186,40 @@ declare -A issue_sounds=(
   ["typo"]="$sound_dir/whoops.aiff"
   ["generic name"]="$sound_dir/generic_name.aiff"
 if echo "$copilot_output" | jq empty > /dev/null 2>&1; then
-    for issue_type in "${!issue_sounds[@]}"; do
-      handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
-    done
-else
-    echo -e "${RED}Error: Invalid JSON received from GitHub Copilot CLI for $file.${NC}"
-    exit 1
-fi
+batch_size=5
+file_batch=()
+
+process_batch() {
+  for file in "${file_batch[@]}"; do
+    if [ -f "$file" ]; then
+      echo -e "${BLUE}Running GitHub Copilot CLI on $file...${NC}"
+      copilot_output=$(gh copilot suggest "$prompt")
+echo "$staged_files" | xargs -0 -I {} bash -c '
+file="{}"
+      for issue_type in "${!issue_sounds[@]}"; do
+        handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
+      done
+
+      # If no issues are found, play a positive sound
+      play_sound_and_message "$sound_dir/positive.aiff" "Great job! No issues found in $file."
+      print_success_graphic
+    fi
+  done
+}
 
 for file in $staged_files; do
-  if [ -f "$file" ]; then
-    echo -e "${BLUE}Running GitHub Copilot CLI on $file...${NC}"
-   
-     copilot_output=$(gh copilot suggest "$prompt")
+  file_batch+=("$file")
+  if [ "${#file_batch[@]}" -ge "$batch_size" ]; then
+    process_batch &
+    file_batch=()
+  fi
+done
 
-for issue_type in "${!issue_sounds[@]}"; do
+if [ "${#file_batch[@]}" -gt 0 ]; then
+  process_batch &
+fi
+
+wait
       handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
     done
 
