@@ -1,9 +1,7 @@
-# commitedian
-A pre-commit hook that gives you a reality check before Copilot leaves a comment on GitHub 🙏🏻
+# 🎭 Commitedian 🎭
+## The Pre-Commit Hook That Roasts Your Code
 
-# Committedian: The Pre-Commit Hook That Roasts Your Code
-
-Welcome to **Committedian**, the pre-commit hook that gives your code a reality check before it hits GitHub. Think of it as your friendly (and slightly sarcastic) code reviewer who loves sound effects and playful banter.
+Welcome to **Commitedian**, the pre-commit hook that gives your code a reality check before it hits GitHub. Think of it as your friendly (and slightly sarcastic) code reviewer who loves sound effects and playful banter.
 
 ## What Does It Do?
 - **AI-Powered Code Review**: Uses GitHub Copilot CLI to analyze your staged files.
