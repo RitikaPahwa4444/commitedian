@@ -54,8 +54,6 @@ if ! command -v jq &> /dev/null; then
   echo -e "${YELLOW}jq is not installed. Installing it for you...${NC}"
   if [[ "$OSTYPE" == "darwin"* ]]; then
     brew install jq
-  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    sudo apt update && sudo apt install -y jq
   else
     echo -e "${RED}Unsupported OS. Please install jq manually: https://stedolan.github.io/jq/download/${NC}"
     exit 1
@@ -72,13 +70,6 @@ if ! command -v gh &> /dev/null; then
   echo -e "${YELLOW}GitHub CLI not found. Installing it for you...${NC}"
   if [[ "$OSTYPE" == "darwin"* ]]; then
     brew install gh
-  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    sudo apt update && sudo apt install -y gh || {
-        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        sudo apt update
-        sudo apt install -y gh
-    }
   else
     echo -e "${RED}Unsupported OS. Please install GitHub CLI manually: https://cli.github.com/${NC}"
     exit 1
@@ -117,11 +108,28 @@ sound_dir="$(dirname "$0")/sounds"
 if [ ! -d "$sound_dir" ]; then
   echo -e "${YELLOW}Sound directory not found. Creating and downloading required sounds...${NC}"
   mkdir -p "$sound_dir"
-  curl -o "$sound_dir/laugh.mp3" https://example.com/sounds/sitcom_laugh.mp3
-  curl -o "$sound_dir/thunderstorm.mp3" https://example.com/sounds/thunderstorm.mp3
-  curl -o "$sound_dir/applause.mp3" https://example.com/sounds/positive.mp3
-  echo -e "${GREEN}All sound files downloaded successfully!${NC}"
 fi
+
+sound_files=(
+  "laugh.mp3 https://github.com/RitikaPahwa4444/commitedian/blob/main/sounds/laugh.mp3"
+  "thunderstorm.mp3 https://github.com/RitikaPahwa4444/commitedian/blob/main/sounds/thunderstorm.mp3"
+  "applause.mp3 https://github.com/RitikaPahwa4444/commitedian/blob/main/sounds/applause.mp3"
+)
+
+for sound_entry in "${sound_files[@]}"; do
+  sound_file=$(echo "$sound_entry" | awk '{print $1}')
+  sound_url=$(echo "$sound_entry" | awk '{print $2}')
+  if [ ! -f "$sound_dir/$sound_file" ]; then
+    echo -e "${YELLOW}Sound file $sound_file not found. Downloading...${NC}"
+    curl -o "$sound_dir/$sound_file" "$sound_url"
+    if [ $? -ne 0 ]; then
+      echo -e "${RED}Failed to download $sound_file. Please check your internet connection or the URL.${NC}"
+      exit 1
+    fi
+  fi
+done
+
+echo -e "${GREEN}All sound files are available and ready!${NC}"
 
 # Function to play sound and display a message
 play_sound_and_message() {
@@ -133,12 +141,6 @@ play_sound_and_message() {
         afplay "$sound_file" &
       else
         echo -e "${YELLOW}afplay is not installed. Skipping audio playback.${NC}"
-      fi
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      if command -v aplay &> /dev/null; then
-        aplay "$sound_file" &
-      else
-        echo -e "${YELLOW}aplay is not installed. Skipping audio playback.${NC}"
       fi
     else
       echo -e "${YELLOW}Audio playback is not supported on this platform.${NC}"
