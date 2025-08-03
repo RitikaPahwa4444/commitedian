@@ -96,7 +96,7 @@ if ! gh auth status &> /dev/null; then
   echo -e "${GREEN}Successfully authenticated with GitHub CLI!${NC}"
 fi
 
-# Install Copilot CLI extension if not present
+# Install GH models extension if not present
 if ! gh extension list | grep -q models; then
   echo -e "${YELLOW}GitHub Models extension not found. Installing it for you...${NC}"
   gh extension install github/gh-models
@@ -114,6 +114,8 @@ sound_files=(
   "laugh.mp3"
   "thunderstorm.mp3"
   "applause.mp3"
+  "boing.mp3"
+  "silly_laugh.mp3"
 )
 
 for sound_file in "${sound_files[@]}"; do
@@ -132,10 +134,12 @@ echo -e "${GREEN}All sound files are available and ready!${NC}"
 play_sound_and_message() {
   local sound_file=$1
   local message=$2
+  echo -e "${BLUE}$message${NC}"
   if [ -f "$sound_file" ]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
       if command -v afplay &> /dev/null; then
         afplay "$sound_file" &
+        wait $! # Wait for the sound to finish playing
       else
         echo -e "${YELLOW}afplay is not installed. Skipping audio playback.${NC}"
       fi
@@ -145,7 +149,6 @@ play_sound_and_message() {
   else
     echo -e "${RED}Sound file $sound_file not found or invalid. Skipping playback.${NC}"
   fi
-  echo -e "${BLUE}$message${NC}"
 }
 
 # Function to handle issue types dynamically
@@ -162,12 +165,12 @@ handle_issue_type() {
 
   while IFS="|" read -r issue_type playful_message; do
     echo "Issue Found: $issue_type"
-    echo "Message: $playful_message"
+    echo  "${issue_sounds[$issue_type]}"
+    play_sound_and_message "${issue_sounds[$issue_type]}" "$playful_message"
     issues_found=true
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
   if $issues_found; then
-    play_sound_and_message "$sound_file" "Issues detected in $file. Please review the messages above."
     print_failure_graphic
   else
     play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in $file."
@@ -203,8 +206,8 @@ fi
 declare issue_sounds=(
   ["debug_log"]="$sounds_dir/laugh.mp3"
   ["hard_coded_secret"]="$sounds_dir/thunderstorm.mp3"
-  ["typo"]="$sounds_dir/laugh.mp3"
-  ["generic_name"]="$sounds_dir/laugh.mp3"
+  ["typo"]="$sounds_dir/silly_laugh.mp3"
+  ["generic_name"]="$sounds_dir/boing.mp3"
 )
 
 batch_size=5

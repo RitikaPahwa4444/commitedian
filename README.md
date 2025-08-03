@@ -4,11 +4,9 @@
 Welcome to **Commitedian**, the pre-commit hook that gives your code a reality check before it hits GitHub. Think of it as your friendly (and slightly sarcastic) code reviewer who loves sound effects and playful banter.
 
 ## What Does It Do?
-- **AI-Powered Code Review**: Uses GitHub Copilot CLI to analyze your staged files.
-- **Playful Feedback**: Detects debug logs, hard-coded secrets, typos, and generic names, then roasts you with sounds and witty messages.
-- **Self-Sufficient**: Automatically downloads all the sound files it needs to keep the fun going.
+Commitedian performs as AI-powered code review and analyses your staged files. It detects weird or verbose debug logs, hard-coded secrets, typos, and generic names, then roasts you with sounds and witty messages 😛
 
-## Installation (a.k.a. Let the Fun Begin)
+## Installation: Let the Fun Begin 😉
 
 1. **Clone This Repository**:
    ```bash
@@ -16,27 +14,14 @@ Welcome to **Commitedian**, the pre-commit hook that gives your code a reality c
    cd commitedian
    ```
 
-2. **Get the Essentials**:
-   - Install [GitHub CLI](https://cli.github.com/):
-     ```bash
-     brew install gh
-     ```
-   - Add the Copilot CLI extension:
-     ```bash
-     gh extension install github/copilot-cli
-     ```
-
-3. **Set Up the Hook**:
+2. **Set Up the Hook**:
    Copy the `pre-commit` file to your Git hooks directory:
    ```bash
    cp pre-commit .git/hooks/pre-commit
    chmod +x .git/hooks/pre-commit
    ```
 
-4. **Sound Check**:
-   The script will download all the sound files it needs. Just make sure you’re online the first time you run it.
-
-## How to Use It (a.k.a. Let the Roasting Begin)
+## How to Use It: Let the Roasting Begin 😎
 
 1. **Stage Your Changes**:
    ```bash
@@ -51,10 +36,10 @@ Welcome to **Commitedian**, the pre-commit hook that gives your code a reality c
    - Fix the issues and try again. Or don’t. Your call.
 
 3. **What to Expect**:
-   - **Debug Logs?** Sitcom laugh. Because, really?
+   - **Debug Logs?** A hearty laugh from the kids. Because, really?
    - **Hard-Coded Secrets?** Thunderstorm. Drama deserved.
-   - **Typos?** A "whoops" sound. Classic.
-   - **Generic Names?** A playful "lost" sound. Are you okay?
+   - **Typos and grammatical errors?** A silly chipmunks hehehei. Classic.
+   - **Generic Names?** A playful boing sound. Are you okay?
    - **No Issues?** A positive sound. You’re a star!
 
 ## Notes (a.k.a. The Fine Print)
