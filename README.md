@@ -45,12 +45,12 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 ## The Fine Print 📝
 - This hook is for macOS and uses `afplay` for sound playback. Sorry, Windows and Linux folks.
 
-## Troubleshooting (a.k.a. When Things Go Wrong)
-- If the hook doesn’t run, make sure it’s executable:
-  ```bash
-  chmod +x .git/hooks/pre-commit
-  ```
-- Missing sound files? Delete the `sounds` directory and let the script download them again.
-
 ## License
 MIT License. Because sharing is caring.
+
+## Assets
+
+The sound effects used in this project are sourced from Pixabay and are used under the Pixabay Content License. They are NOT covered by the MIT License.
+
+You can view the Pixabay license terms here: [https://pixabay.com/service/license-summary/](https://pixabay.com/service/license-summary/)
+
