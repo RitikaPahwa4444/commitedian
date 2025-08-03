@@ -106,8 +106,10 @@ if ! gh extension list | grep -q models; then
   fi
   echo -e "${GREEN}GitHub Models extension installed successfully!${NC}"
 fi
+# Ensure required sound files are available in the repository's `sounds` folder
+repo_root=$(git rev-parse --show-toplevel)
+sounds_dir="$repo_root/sounds"
 
-# Ensure required sound files are available in Downloads folder
 sound_files=(
   "laugh.mp3"
   "thunderstorm.mp3"
@@ -115,12 +117,12 @@ sound_files=(
 )
 
 for sound_file in "${sound_files[@]}"; do
-  source_path="$HOME/Downloads/$sound_file"
+  source_path="$sounds_dir/$sound_file"
   if [ ! -f "$source_path" ]; then
-    echo -e "${RED}Sound file $sound_file not found in Downloads. Please ensure it is present.${NC}"
+    echo -e "${RED}Sound file $sound_file not found in $sounds_dir. Please ensure it is present.${NC}"
     exit 1
   else
-    echo -e "${GREEN}Sound file $sound_file found in Downloads.${NC}"
+    echo -e "${GREEN}Sound file $sound_file found in $sounds_dir.${NC}"
   fi
 done
 
@@ -164,18 +166,13 @@ handle_issue_type() {
     issues_found=true
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
-
-
   if $issues_found; then
     play_sound_and_message "$sound_file" "Issues detected in $file. Please review the messages above."
     print_failure_graphic
   else
-    play_sound_and_message "$HOME/downloads/applause.mp3" "Great job! No issues found in $file."
+    play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in $file."
     print_success_graphic
   fi
-  # else
-  #   echo -e "${RED}Invalid JSON received from Copilot output. Skipping issue handling.${NC}"
-  # fi
 }
 
 prompt="Review this code diff for the following issues: 
@@ -204,10 +201,10 @@ if [ -z "$staged_files" ]; then
 fi
 
 declare issue_sounds=(
-  ["debug_log"]="$HOME/downloads/laugh.mp3"
-  ["hard_coded_secret"]="$HOME/downloads/thunderstorm.mp3"
-  ["typo"]="$HOME/downloads/laugh.mp3"
-  ["generic_name"]="$HOME/downloads/laugh.mp3"
+  ["debug_log"]="$sounds_dir/laugh.mp3"
+  ["hard_coded_secret"]="$sounds_dir/thunderstorm.mp3"
+  ["typo"]="$sounds_dir/laugh.mp3"
+  ["generic_name"]="$sounds_dir/laugh.mp3"
 )
 
 batch_size=5
