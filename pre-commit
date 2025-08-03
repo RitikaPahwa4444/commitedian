@@ -48,6 +48,8 @@ print_failure_graphic() {
 }
 
 print_welcome_banner
+issues_found=false
+
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
@@ -63,6 +65,8 @@ if ! command -v jq &> /dev/null; then
     exit 1
   fi
   echo -e "${GREEN}jq installed successfully!${NC}"
+else
+  echo -e "${GREEN}jq is already installed.${NC}"
 fi
 
 # Install GitHub CLI if not present
@@ -93,39 +97,30 @@ if ! gh auth status &> /dev/null; then
 fi
 
 # Install Copilot CLI extension if not present
-if ! gh extension list | grep -q copilot; then
-  echo -e "${YELLOW}GitHub Copilot CLI extension not found. Installing it for you...${NC}"
-  gh extension install github/gh-copilot
+if ! gh extension list | grep -q models; then
+  echo -e "${YELLOW}GitHub Models extension not found. Installing it for you...${NC}"
+  gh extension install github/gh-models
   if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to install GitHub Copilot CLI extension. Please install it manually: https://docs.github.com/en/copilot/how-tos/use-copilot-for-common-tasks/use-copilot-in-the-cli${NC}"
+    echo -e "${RED}Failed to install GitHub Models extension. Please install it manually: https://github.com/github/gh-models${NC}"
     exit 1
   fi
-  echo -e "${GREEN}GitHub Copilot CLI extension installed successfully!${NC}"
+  echo -e "${GREEN}GitHub Models extension installed successfully!${NC}"
 fi
 
-# Ensure required sound files are available
-sound_dir="$(dirname "$0")/sounds"
-if [ ! -d "$sound_dir" ]; then
-  echo -e "${YELLOW}Sound directory not found. Creating and downloading required sounds...${NC}"
-  mkdir -p "$sound_dir"
-fi
-
+# Ensure required sound files are available in Downloads folder
 sound_files=(
-  "laugh.mp3 https://github.com/RitikaPahwa4444/commitedian/blob/main/sounds/laugh.mp3"
-  "thunderstorm.mp3 https://github.com/RitikaPahwa4444/commitedian/blob/main/sounds/thunderstorm.mp3"
-  "applause.mp3 https://github.com/RitikaPahwa4444/commitedian/blob/main/sounds/applause.mp3"
+  "laugh.mp3"
+  "thunderstorm.mp3"
+  "applause.mp3"
 )
 
-for sound_entry in "${sound_files[@]}"; do
-  sound_file=$(echo "$sound_entry" | awk '{print $1}')
-  sound_url=$(echo "$sound_entry" | awk '{print $2}')
-  if [ ! -f "$sound_dir/$sound_file" ]; then
-    echo -e "${YELLOW}Sound file $sound_file not found. Downloading...${NC}"
-    curl -o "$sound_dir/$sound_file" "$sound_url"
-    if [ $? -ne 0 ]; then
-      echo -e "${RED}Failed to download $sound_file. Please check your internet connection or the URL.${NC}"
-      exit 1
-    fi
+for sound_file in "${sound_files[@]}"; do
+  source_path="$HOME/Downloads/$sound_file"
+  if [ ! -f "$source_path" ]; then
+    echo -e "${RED}Sound file $sound_file not found in Downloads. Please ensure it is present.${NC}"
+    exit 1
+  else
+    echo -e "${GREEN}Sound file $sound_file found in Downloads.${NC}"
   fi
 done
 
@@ -156,54 +151,77 @@ handle_issue_type() {
   local issue_type=$1
   local file=$2
   local sound_file=$3
+  local copilot_output=$4
 
-  if echo "$copilot_output" | jq -e --arg type "$issue_type" '.issue_type == $type' > /dev/null; then
-local message=$(echo "$copilot_output" | jq -r '.playful_message')
-    play_sound_and_message "$sound_file" "$message"
+  # Sanitize copilot_output by removing ```json and ``` markers
+  copilot_output=$(echo "$copilot_output" | sed 's/^```json//' | sed 's/```$//')
+
+  echo "$copilot_output"
+
+  while IFS="|" read -r issue_type playful_message; do
+    echo "Issue Found: $issue_type"
+    echo "Message: $playful_message"
+    issues_found=true
+  done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
+
+
+
+  if $issues_found; then
+    play_sound_and_message "$sound_file" "Issues detected in $file. Please review the messages above."
     print_failure_graphic
-    exit 1
+  else
+    play_sound_and_message "$HOME/downloads/applause.mp3" "Great job! No issues found in $file."
+    print_success_graphic
   fi
+  # else
+  #   echo -e "${RED}Invalid JSON received from Copilot output. Skipping issue handling.${NC}"
+  # fi
 }
-prompt="Review this file for the following issues: 
+
+prompt="Review this code for the following issues: 
     1. Weird debug logs (e.g., \"hello from ABC!\") or too many debug print statements (as if a debugger never existed). 
     2. Hard-coded secrets (e.g., passwords, API keys). 
     3. Typos or grammatical errors. 
     4. Generic variable or function names (e.g., temp, data). 
     5. Any other potential issues or improvements. 
-    For each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the file being reviewed."
-copilot_output=$(gh copilot suggest "$prompt")
+    For each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the file being reviewed.
+
+    Classify the issues into the following issue_type:
+        "debug_log"
+        "hard_coded_secret"
+        "typo"
+        "generic_name"
+    Only return valid json as output, no other text.
+    Indicate the line of code (skip line number, point to actual code) and context of the issue in the playful message. Name the exact generic variable name used, typo made, grammatical error, or debug log message.
+    FILE_CONTENT: "
+
 # Analyze all staged files
-staged_files=$(git diff --cached --name-only -z)
+staged_files=$(git diff --cached --name-only)
 
 if [ -z "$staged_files" ]; then
   echo -e "${YELLOW}No files staged for commit. Skipping analysis.${NC}"
   exit 0
 fi
 
-declare -A issue_sounds=(
-  ["debug log"]="$sound_dir/laugh.mp3"
-  ["hard-coded secret"]="$sound_dir/thunderstorm.mp3"
-  ["typo"]="$sound_dir/laugh.mp3"
-  ["generic name"]="$sound_dir/laugh.mp3"
+declare issue_sounds=(
+  ["debug_log"]="$HOME/downloads/laugh.mp3"
+  ["hard_coded_secret"]="$HOME/downloads/thunderstorm.mp3"
+  ["typo"]="$HOME/downloads/laugh.mp3"
+  ["generic_name"]="$HOME/downloads/laugh.mp3"
 )
-if echo "$copilot_output" | jq empty > /dev/null 2>&1; then
+
 batch_size=5
 file_batch=()
 
 process_batch() {
   for file in "${file_batch[@]}"; do
     if [ -f "$file" ]; then
-      echo -e "${BLUE}Running GitHub Copilot CLI on $file...${NC}"
-      copilot_output=$(gh copilot suggest "$prompt")
-echo "$staged_files" | xargs -0 -I {} bash -c '
-file="{}"
+      echo -e "${BLUE}Running GitHub review on $file...${NC}"
+        final_prompt="$prompt\n$(cat "$file")"
+        copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
       for issue_type in "${!issue_sounds[@]}"; do
-        handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
+        handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}" "$copilot_output"
       done
-
-      # If no issues are found, play a positive sound
-      play_sound_and_message "$sound_dir/applause.mp3" "Great job! No issues found in $file."
-      print_success_graphic
     fi
   done
 }
@@ -211,24 +229,14 @@ file="{}"
 for file in $staged_files; do
   file_batch+=("$file")
   if [ "${#file_batch[@]}" -ge "$batch_size" ]; then
-    process_batch &
+    process_batch
     file_batch=()
   fi
 done
 
 if [ "${#file_batch[@]}" -gt 0 ]; then
-  process_batch &
+  process_batch
 fi
-
-wait
-      handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}"
-    done
-
-    # If no issues are found, play a positive sound
-    play_sound_and_message "$sound_dir/positive.mp3" "Great job! No issues found in $file."
-    print_success_graphic
-  fi
-done
 
 # Allow the commit to proceed
 exit 0
