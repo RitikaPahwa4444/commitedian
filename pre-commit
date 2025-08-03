@@ -118,6 +118,13 @@ sound_files=(
   "silly_laugh.mp3"
 )
 
+declare -A issue_sounds=(
+  ["debug_log"]="$sounds_dir/laugh.mp3"
+  ["hard_coded_secret"]="$sounds_dir/thunderstorm.mp3"
+  ["typo"]="$sounds_dir/silly_laugh.mp3"
+  ["generic_name"]="$sounds_dir/boing.mp3"
+)
+
 for sound_file in "${sound_files[@]}"; do
   source_path="$sounds_dir/$sound_file"
   if [ ! -f "$source_path" ]; then
@@ -134,12 +141,11 @@ echo -e "${GREEN}All sound files are available and ready!${NC}"
 play_sound_and_message() {
   local sound_file=$1
   local message=$2
-  echo -e "${BLUE}$message${NC}"
+
   if [ -f "$sound_file" ]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
       if command -v afplay &> /dev/null; then
         afplay "$sound_file" &
-        wait $! # Wait for the sound to finish playing
       else
         echo -e "${YELLOW}afplay is not installed. Skipping audio playback.${NC}"
       fi
@@ -147,8 +153,10 @@ play_sound_and_message() {
       echo -e "${YELLOW}Audio playback is not supported on this platform.${NC}"
     fi
   else
-    echo -e "${RED}Sound file $sound_file not found or invalid. Skipping playback.${NC}"
+    echo -e "${RED}Sound file $sound_file not found. Skipping playback.${NC}"
   fi
+
+  echo -e "${BLUE}$message${NC}"
 }
 
 # Function to handle issue types dynamically
@@ -165,8 +173,12 @@ handle_issue_type() {
 
   while IFS="|" read -r issue_type playful_message; do
     echo "Issue Found: $issue_type"
-    echo  "${issue_sounds[$issue_type]}"
-    play_sound_and_message "${issue_sounds[$issue_type]}" "$playful_message"
+    sound_file="${issue_sounds[$issue_type]}"
+    if [[ -n "$sound_file" ]]; then
+        play_sound_and_message "$sound_file" "$playful_message"
+    else
+        echo -e "${YELLOW}No sound associated with issue type: $issue_type. Skipping playback.${NC}"
+    fi
     issues_found=true
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
@@ -202,13 +214,6 @@ if [ -z "$staged_files" ]; then
   echo -e "${YELLOW}No files staged for commit. Skipping analysis.${NC}"
   exit 0
 fi
-
-declare issue_sounds=(
-  ["debug_log"]="$sounds_dir/laugh.mp3"
-  ["hard_coded_secret"]="$sounds_dir/thunderstorm.mp3"
-  ["typo"]="$sounds_dir/silly_laugh.mp3"
-  ["generic_name"]="$sounds_dir/boing.mp3"
-)
 
 batch_size=5
 file_batch=()
