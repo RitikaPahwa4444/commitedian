@@ -110,42 +110,16 @@ fi
 repo_root=$(git rev-parse --show-toplevel)
 sounds_dir="$repo_root/sounds"
 
-sound_files=(
-  "laugh.mp3"
-  "thunderstorm.mp3"
-  "applause.mp3"
-  "boing.mp3"
-  "silly_laugh.mp3"
-)
-
-declare -A issue_sounds=(
-  ["debug_log"]="$sounds_dir/laugh.mp3"
-  ["hard_coded_secret"]="$sounds_dir/thunderstorm.mp3"
-  ["typo"]="$sounds_dir/silly_laugh.mp3"
-  ["generic_name"]="$sounds_dir/boing.mp3"
-)
-
-for sound_file in "${sound_files[@]}"; do
-  source_path="$sounds_dir/$sound_file"
-  if [ ! -f "$source_path" ]; then
-    echo -e "${RED}Sound file $sound_file not found in $sounds_dir. Please ensure it is present.${NC}"
-    exit 1
-  else
-    echo -e "${GREEN}Sound file $sound_file found in $sounds_dir.${NC}"
-  fi
-done
-
-echo -e "${GREEN}All sound files are available and ready!${NC}"
-
 # Function to play sound and display a message
 play_sound_and_message() {
   local sound_file=$1
   local message=$2
+  echo -e "${BLUE}$message${NC}"
 
   if [ -f "$sound_file" ]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
       if command -v afplay &> /dev/null; then
-        afplay "$sound_file" &
+        afplay "$sound_file"
       else
         echo -e "${YELLOW}afplay is not installed. Skipping audio playback.${NC}"
       fi
@@ -156,15 +130,12 @@ play_sound_and_message() {
     echo -e "${RED}Sound file $sound_file not found. Skipping playback.${NC}"
   fi
 
-  echo -e "${BLUE}$message${NC}"
 }
 
 # Function to handle issue types dynamically
 handle_issue_type() {
-  local issue_type=$1
-  local file=$2
-  local sound_file=$3
-  local copilot_output=$4
+  local file=$1
+  local copilot_output=$2
 
   # Sanitize copilot_output by removing ```json and ``` markers
   copilot_output=$(echo "$copilot_output" | sed 's/^```json//' | sed 's/```$//')
@@ -173,7 +144,7 @@ handle_issue_type() {
 
   while IFS="|" read -r issue_type playful_message; do
     echo "Issue Found: $issue_type"
-    sound_file="${issue_sounds[$issue_type]}"
+    sound_file="$sounds_dir/$issue_type.mp3"
     if [[ -n "$sound_file" ]]; then
         play_sound_and_message "$sound_file" "$playful_message"
     else
@@ -231,9 +202,7 @@ process_batch() {
       final_prompt="$prompt\n$git_diff"
       copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
       
-      for issue_type in "${!issue_sounds[@]}"; do
-        handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}" "$copilot_output"
-      done
+      handle_issue_type "$file" "$copilot_output"
     fi
   done
 }
