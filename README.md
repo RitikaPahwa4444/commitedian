@@ -1,9 +1,11 @@
 # 🎭 Commitedian 🎭
+
 ## The Pre-Commit Hook That Roasts Your Code
 
 Welcome to **Commitedian**, the pre-commit hook that gives your code a reality check before it hits GitHub. Think of it as your friendly (and slightly sarcastic) code reviewer who loves sound effects and playful banter.
 
 ## What Does It Do?
+
 Commitedian performs as AI-powered code review and analyses your staged files. It detects weird or verbose debug logs, hard-coded secrets, typos, and generic names, then roasts you with sounds and witty messages 😛
 
 ## Installation: Let the Fun Begin 😉

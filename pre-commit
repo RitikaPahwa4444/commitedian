@@ -189,22 +189,27 @@ fi
 batch_size=5
 file_batch=()
 
+process_file() {
+  local file=$1
+  if [ -f "$file" ]; then
+    echo -e "${BLUE}Running GitHub review on $file...${NC}"
+    git_diff=$(git diff --cached "$file")
+    if [ -z "$git_diff" ]; then
+      echo -e "${YELLOW}No changes detected in $file. Skipping analysis.${NC}"
+      return
+    fi
+    echo -e "${BLUE}Code diff for $file:\n$git_diff${NC}"
+    final_prompt="$prompt\n$git_diff"
+    copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
+    handle_issue_type "$file" "$copilot_output"
+  fi
+}
+
 process_batch() {
   for file in "${file_batch[@]}"; do
-    if [ -f "$file" ]; then
-      echo -e "${BLUE}Running GitHub review on $file...${NC}"
-      git_diff=$(git diff --cached "$file")
-      if [ -z "$git_diff" ]; then
-        echo -e "${YELLOW}No changes detected in $file. Skipping analysis.${NC}"
-        continue
-      fi
-      echo -e "${BLUE}Code diff for $file:\n$git_diff${NC}"
-      final_prompt="$prompt\n$git_diff"
-      copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
-      
-      handle_issue_type "$file" "$copilot_output"
-    fi
+    process_file "$file" &
   done
+  wait
 }
 
 for file in $staged_files; do
