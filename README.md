@@ -48,7 +48,7 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 - This hook is for macOS and uses `afplay` for sound playback. Sorry, Windows and Linux folks.
 
 ## License
-MIT License. Because sharing is caring.
+The script comes with an MIT License. Because sharing is caring.
 
 ## Assets
 
