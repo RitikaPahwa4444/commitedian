@@ -238,5 +238,13 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
   process_batch
 fi
 
-# Allow the commit to proceed
-exit 0
+echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
+read -r user_input
+
+if [[ "$user_input" == "yes" ]]; then
+  echo -e "${GREEN}Proceeding with the commit...${NC}"
+  exit 0
+else
+  echo -e "${RED}Commit aborted by the user.${NC}"
+  exit 1
+fi
