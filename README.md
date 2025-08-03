@@ -42,9 +42,8 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
    - **Generic Names?** A playful boing sound. Are you okay?
    - **No Issues?** A positive sound. You’re a star!
 
-## Notes (a.k.a. The Fine Print)
-- This hook is for macOS and uses `afplay` for sound playback. Sorry, Windows folks.
-- The `sounds` directory will magically appear with all the required files. Don’t delete it unless you want to ruin the fun.
+## The Fine Print 📝
+- This hook is for macOS and uses `afplay` for sound playback. Sorry, Windows and Linux folks.
 
 ## Troubleshooting (a.k.a. When Things Go Wrong)
 - If the hook doesn’t run, make sure it’s executable:
