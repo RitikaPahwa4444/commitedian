@@ -178,22 +178,22 @@ handle_issue_type() {
   # fi
 }
 
-prompt="Review this code for the following issues: 
+prompt="Review this code diff for the following issues: 
     1. Weird debug logs (e.g., \"hello from ABC!\") or too many debug print statements (as if a debugger never existed). 
     2. Hard-coded secrets (e.g., passwords, API keys). 
     3. Typos or grammatical errors. 
     4. Generic variable or function names (e.g., temp, data). 
     5. Any other potential issues or improvements. 
-    For each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the file being reviewed.
+    For each detected issue, provide a JSON response with fields: \"issue_type\" and \"playful_message\". The \"playful_message\" should be witty and engaging, tailored to the issue type and the code being reviewed.
 
     Classify the issues into the following issue_type:
-        "debug_log"
-        "hard_coded_secret"
-        "typo"
-        "generic_name"
+        \"debug_log\"
+        \"hard_coded_secret\"
+        \"typo\"
+        \"generic_name\"
     Only return valid json as output, no other text.
     Indicate the line of code (skip line number, point to actual code) and context of the issue in the playful message. Name the exact generic variable name used, typo made, grammatical error, or debug log message.
-    FILE_CONTENT: "
+    CODE_DIFF: "
 
 # Analyze all staged files
 staged_files=$(git diff --cached --name-only)
@@ -217,8 +217,15 @@ process_batch() {
   for file in "${file_batch[@]}"; do
     if [ -f "$file" ]; then
       echo -e "${BLUE}Running GitHub review on $file...${NC}"
-        final_prompt="$prompt\n$(cat "$file")"
-        copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
+      git_diff=$(git diff --cached "$file")
+      if [ -z "$git_diff" ]; then
+        echo -e "${YELLOW}No changes detected in $file. Skipping analysis.${NC}"
+        continue
+      fi
+      echo -e "${BLUE}Code diff for $file:\n$git_diff${NC}"
+      final_prompt="$prompt\n$git_diff"
+      copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
+      
       for issue_type in "${!issue_sounds[@]}"; do
         handle_issue_type "$issue_type" "$file" "${issue_sounds[$issue_type]}" "$copilot_output"
       done
@@ -239,7 +246,8 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
 fi
 
 echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
-read -r user_input
+
+read -r user_input < /dev/tty
 
 if [[ "$user_input" == "yes" ]]; then
   echo -e "${GREEN}Proceeding with the commit...${NC}"
