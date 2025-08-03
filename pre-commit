@@ -112,16 +112,14 @@ if ! gh extension list | grep -q copilot; then
   echo -e "${GREEN}GitHub Copilot CLI extension installed successfully!${NC}"
 fi
 
-# Ensure required sound files are installed
+# Ensure required sound files are available
 sound_dir="$(dirname "$0")/sounds"
 if [ ! -d "$sound_dir" ]; then
   echo -e "${YELLOW}Sound directory not found. Creating and downloading required sounds...${NC}"
   mkdir -p "$sound_dir"
-  curl -o "$sound_dir/sitcom_laugh.aiff" https://example.com/sounds/sitcom_laugh.aiff
-  curl -o "$sound_dir/thunderstorm.aiff" https://example.com/sounds/thunderstorm.aiff
-  curl -o "$sound_dir/whoops.aiff" https://example.com/sounds/whoops.aiff
-  curl -o "$sound_dir/generic_name.aiff" https://example.com/sounds/generic_name.aiff
-  curl -o "$sound_dir/positive.aiff" https://example.com/sounds/positive.aiff
+  curl -o "$sound_dir/laugh.mp3" https://example.com/sounds/sitcom_laugh.mp3
+  curl -o "$sound_dir/thunderstorm.mp3" https://example.com/sounds/thunderstorm.mp3
+  curl -o "$sound_dir/applause.mp3" https://example.com/sounds/positive.mp3
   echo -e "${GREEN}All sound files downloaded successfully!${NC}"
 fi
 
@@ -181,10 +179,11 @@ if [ -z "$staged_files" ]; then
 fi
 
 declare -A issue_sounds=(
-  ["debug log"]="$sound_dir/sitcom_laugh.aiff"
-  ["hard-coded secret"]="$sound_dir/thunderstorm.aiff"
-  ["typo"]="$sound_dir/whoops.aiff"
-  ["generic name"]="$sound_dir/generic_name.aiff"
+  ["debug log"]="$sound_dir/laugh.mp3"
+  ["hard-coded secret"]="$sound_dir/thunderstorm.mp3"
+  ["typo"]="$sound_dir/laugh.mp3"
+  ["generic name"]="$sound_dir/laugh.mp3"
+)
 if echo "$copilot_output" | jq empty > /dev/null 2>&1; then
 batch_size=5
 file_batch=()
@@ -201,7 +200,7 @@ file="{}"
       done
 
       # If no issues are found, play a positive sound
-      play_sound_and_message "$sound_dir/positive.aiff" "Great job! No issues found in $file."
+      play_sound_and_message "$sound_dir/applause.mp3" "Great job! No issues found in $file."
       print_success_graphic
     fi
   done
@@ -224,7 +223,7 @@ wait
     done
 
     # If no issues are found, play a positive sound
-    play_sound_and_message "$sound_dir/positive.aiff" "Great job! No issues found in $file."
+    play_sound_and_message "$sound_dir/positive.mp3" "Great job! No issues found in $file."
     print_success_graphic
   fi
 done
