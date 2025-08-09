@@ -134,6 +134,8 @@ fi
 batch_size=5
 file_batch=()
 
+github_pat="abcdgyds"
+
 process_file() {
   local file=$1
   if [ -f "$file" ]; then
