@@ -16,12 +16,16 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
    cd commitedian
    ```
 
-2. **Set Up the Hook**:
-   Copy the `pre-commit` file to your Git hooks directory:
+2. **Run the Initialization Script**:
+   Execute the `init.sh` script to download the required dependencies and set up the pre-commit hook:
    ```bash
-   cp pre-commit .git/hooks/pre-commit
-   chmod +x .git/hooks/pre-commit
+   ./init.sh
    ```
+
+   This script will :
+   - Install homebrew, jq and gh if not installed already.
+   - Download all the sound files required from Pixabay.
+   - Copy the `pre-commit` file to your Git hooks directory and make it executable.
 
 ## How to Use It: Let the Roasting Begin 😎
 
@@ -55,4 +59,3 @@ The script comes with an MIT License. Because sharing is caring.
 The sound effects used in this project are sourced from Pixabay and are used under the Pixabay Content License. They are NOT covered by the MIT License.
 
 You can view the Pixabay license terms here: [https://pixabay.com/service/license-summary/](https://pixabay.com/service/license-summary/)
-

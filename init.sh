@@ -65,4 +65,13 @@ for item in "${sound_list[@]}"; do
   fi
 done
 
+# Copy pre-commit hook to Git hooks directory
+hooks_dir=".git/hooks"
+if [ ! -d "$hooks_dir" ]; then
+  echo "Creating Git hooks directory: $hooks_dir"
+  mkdir -p "$hooks_dir"
+fi
+cp pre-commit "$hooks_dir/pre-commit"
+chmod +x "$hooks_dir/pre-commit"
+
 echo "✅ Environment initialized successfully!"
