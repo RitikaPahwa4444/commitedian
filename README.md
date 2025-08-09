@@ -19,6 +19,7 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 2. **Run the Initialization Script**:
    Execute the `init.sh` script to download the required dependencies and set up the pre-commit hook:
    ```bash
+   chmod +x init.sh
    ./init.sh
    ```
 
