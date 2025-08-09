@@ -88,8 +88,12 @@ handle_issue_type() {
     return
   fi
 
+  if ! echo "$copilot_output" | jq -e 'all(.[]; has("issue_type") and has("playful_message"))' >/dev/null; then
+    echo -e "${RED}Unexpected JSON structure returned from LLM for $file. Skipping analysis for this file.${NC}"
+    return
+  fi
+
   while IFS="|" read -r issue_type playful_message; do
-    echo "Issue Found: $issue_type"
     sound_file="$sounds_dir/$issue_type.mp3"
     if [[ -n "$sound_file" ]]; then
         play_sound_and_message "$sound_file" "$playful_message"
