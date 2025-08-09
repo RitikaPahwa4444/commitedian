@@ -169,6 +169,7 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
   process_batch
 fi
 
+echo "$any_issues_found"
 # After processing all files, play success sound/graphic if no issues found
 if ! $any_issues_found; then
   play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
