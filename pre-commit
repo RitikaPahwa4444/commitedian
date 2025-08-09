@@ -48,7 +48,8 @@ print_failure_graphic() {
 }
 
 print_welcome_banner
-any_issues_found=false
+issue_marker_dir="/tmp/commitedian_issues_$$"
+mkdir -p "$issue_marker_dir"
 
 # Function to play sound and display a message
 play_sound_and_message() {
@@ -88,21 +89,22 @@ handle_issue_type() {
     return
   fi
 
-  if ! echo "$copilot_output" | jq -e 'all(.[]; has("issue_type") and has("playful_message"))' >/dev/null; then
-    echo -e "${RED}Unexpected JSON structure returned from LLM for $file. Skipping analysis for this file.${NC}"
-    return
-  fi
-
+  local file_issues_found=false
   while IFS="|" read -r issue_type playful_message; do
+    echo "Issue Found: $issue_type"
     sound_file="$sounds_dir/$issue_type.mp3"
     if [[ -n "$sound_file" ]]; then
         play_sound_and_message "$sound_file" "$playful_message"
     else
         echo -e "${YELLOW}No sound associated with issue type: $issue_type. Skipping playback.${NC}"
     fi
-    any_issues_found=true
+    file_issues_found=true
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
+  if $file_issues_found; then
+    print_failure_graphic
+    touch "$issue_marker_dir/$file"
+  fi
 }
 
 prompt="Review this code diff for the following issues: 
@@ -132,7 +134,6 @@ fi
 
 batch_size=5
 file_batch=()
-
 process_file() {
   local file=$1
   if [ -f "$file" ]; then
@@ -168,22 +169,23 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
   process_batch
 fi
 
-wait
-# After processing all files, play success sound/graphic if no issues found
-if ! $any_issues_found; then
-  play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
-  print_success_graphic
-  echo -e "${GREEN}Proceeding with the commit...${NC}"
-  exit 0
-else
-  print_failure_graphic
+# After processing all files, check for issue marker files
+if [ "$(ls -A $issue_marker_dir)" ]; then
   echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
   read -r user_input < /dev/tty
   if [[ "$user_input" == "yes" ]]; then
     echo -e "${GREEN}Proceeding with the commit...${NC}"
+    rm -rf "$issue_marker_dir"
     exit 0
   else
     echo -e "${RED}Commit aborted by the user.${NC}"
+    rm -rf "$issue_marker_dir"
     exit 1
   fi
+else
+  play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
+  print_success_graphic
+  echo -e "${GREEN}Proceeding with the commit...${NC}"
+  rm -rf "$issue_marker_dir"
+  exit 0
 fi
