@@ -10,7 +10,7 @@ BLUE="\033[0;34m"
 NC="\033[0m" # No Color
 
 repo_root=$(git rev-parse --show-toplevel)
-sounds_dir="$repo_root/sounds"
+sounds_dir="$(cd "$(dirname "$0")" && pwd)/sounds"
 
 # Function to display a welcome banner
 print_welcome_banner() {
