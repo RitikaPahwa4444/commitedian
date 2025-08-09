@@ -88,7 +88,6 @@ handle_issue_type() {
     return
   fi
 
-  local file_issues_found=false
   while IFS="|" read -r issue_type playful_message; do
     echo "Issue Found: $issue_type"
     sound_file="$sounds_dir/$issue_type.mp3"
@@ -97,7 +96,6 @@ handle_issue_type() {
     else
         echo -e "${YELLOW}No sound associated with issue type: $issue_type. Skipping playback.${NC}"
     fi
-    file_issues_found=true
     any_issues_found=true
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
