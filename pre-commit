@@ -133,9 +133,7 @@ fi
 
 batch_size=5
 file_batch=()
-
-github_pat="abcdgyds"
-
+github_pat="abcdgh"
 process_file() {
   local file=$1
   if [ -f "$file" ]; then
@@ -149,6 +147,7 @@ process_file() {
     final_prompt="$prompt\n$git_diff"
     copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
     handle_issue_type "$file" "$copilot_output"
+    echo "$any_issues_found"
   fi
 }
 
