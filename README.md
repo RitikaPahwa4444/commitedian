@@ -19,13 +19,13 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 2. **Run the Initialization Script**:
    Execute the `init.sh` script to download the required dependencies and set up the pre-commit hook:
    ```bash
-   chmod +x init.sh
-   ./init.sh
+   chmod +x init
+   ./init
    ```
 
    This script will :
    - Install homebrew, jq and gh if not installed already.
-   - Download all the sound files required from Pixabay.
+   - Download all the sound files required from Pixabay in your Downloads directory.
    - Copy the `pre-commit` file to your Git hooks directory and make it executable.
 
 ## How to Use It: Let the Roasting Begin 😎
