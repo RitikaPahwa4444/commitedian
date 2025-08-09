@@ -104,7 +104,6 @@ handle_issue_type() {
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
   if $file_issues_found; then
-    print_failure_graphic
     touch "$issue_marker_dir/$file"
   fi
 }
@@ -175,6 +174,7 @@ fi
 echo "$any_issues_found"
 # After processing all files, check for issue marker files
 if [ "$(ls -A $issue_marker_dir)" ]; then
+  print_failure_graphic
   echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
   read -r user_input < /dev/tty
   if [[ "$user_input" == "yes" ]]; then
