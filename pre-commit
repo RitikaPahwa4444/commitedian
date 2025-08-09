@@ -185,8 +185,8 @@ if [ "$(ls -A $issue_marker_dir)" ]; then
     exit 1
   fi
 else
-  play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
   print_success_graphic
+  play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
   echo -e "${GREEN}Proceeding with the commit...${NC}"
   rm -rf "$issue_marker_dir"
   exit 0
