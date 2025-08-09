@@ -50,66 +50,6 @@ print_failure_graphic() {
 print_welcome_banner
 issues_found=false
 
-
-# Check if jq is installed
-if ! command -v jq &> /dev/null; then
-  echo -e "${YELLOW}jq is not installed. Installing it for you...${NC}"
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    brew install jq
-  else
-    echo -e "${RED}Unsupported OS. Please install jq manually: https://stedolan.github.io/jq/download/${NC}"
-    exit 1
-  fi
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to install jq. Please install it manually: https://stedolan.github.io/jq/download/${NC}"
-    exit 1
-  fi
-  echo -e "${GREEN}jq installed successfully!${NC}"
-else
-  echo -e "${GREEN}jq is already installed.${NC}"
-fi
-
-# Install GitHub CLI if not present
-if ! command -v gh &> /dev/null; then
-  echo -e "${YELLOW}GitHub CLI not found. Installing it for you...${NC}"
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    brew install gh
-  else
-    echo -e "${RED}Unsupported OS. Please install GitHub CLI manually: https://cli.github.com/${NC}"
-    exit 1
-  fi
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to install GitHub CLI. Please install it manually: https://cli.github.com/${NC}"
-    exit 1
-  fi
-  echo -e "${GREEN}GitHub CLI installed successfully!${NC}"
-fi
-
-# Ensure GitHub CLI is authenticated
-if ! gh auth status &> /dev/null; then
-  echo -e "${YELLOW}You are not logged into GitHub CLI. Initiating login...${NC}"
-  gh auth login
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to authenticate with GitHub CLI. Please try again.${NC}"
-    exit 1
-  fi
-  echo -e "${GREEN}Successfully authenticated with GitHub CLI!${NC}"
-fi
-
-# Install GH models extension if not present
-if ! gh extension list | grep -q models; then
-  echo -e "${YELLOW}GitHub Models extension not found. Installing it for you...${NC}"
-  gh extension install github/gh-models
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to install GitHub Models extension. Please install it manually: https://github.com/github/gh-models${NC}"
-    exit 1
-  fi
-  echo -e "${GREEN}GitHub Models extension installed successfully!${NC}"
-fi
-# Ensure required sound files are available in the repository's `sounds` folder
-repo_root=$(git rev-parse --show-toplevel)
-sounds_dir="$repo_root/sounds"
-
 # Function to play sound and display a message
 play_sound_and_message() {
   local sound_file=$1
@@ -174,7 +114,7 @@ prompt="Review this code diff for the following issues:
         \"hard_coded_secret\"
         \"typo\"
         \"generic_name\"
-    Only return valid json as output, no other text.
+    Only return valid json as output, no other text. If no issues are found, return an empty array: []
     Indicate the line of code (skip line number, point to actual code) and context of the issue in the playful message. Name the exact generic variable name used, typo made, grammatical error, or debug log message.
     CODE_DIFF: "
 
