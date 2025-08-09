@@ -12,7 +12,7 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 
 1. **Clone This Repository**:
    ```bash
-   git clone git@github.com:RitikaPahwa4444/commitedian.git
+   git clone https://github.com/RitikaPahwa4444/commitedian.git
    cd commitedian
    ```
 

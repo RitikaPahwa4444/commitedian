@@ -148,7 +148,6 @@ process_file() {
     final_prompt="$prompt\n$git_diff"
     copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
     handle_issue_type "$file" "$copilot_output"
-    echo "$any_issues_found"
   fi
 }
 
@@ -171,7 +170,6 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
   process_batch
 fi
 
-echo "$any_issues_found"
 # After processing all files, check for issue marker files
 if [ "$(ls -A $issue_marker_dir)" ]; then
   print_failure_graphic
