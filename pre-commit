@@ -48,7 +48,7 @@ print_failure_graphic() {
 }
 
 print_welcome_banner
-issues_found=false
+any_issues_found=false
 
 # Function to play sound and display a message
 play_sound_and_message() {
@@ -82,6 +82,13 @@ handle_issue_type() {
 
   echo "$copilot_output"
 
+  # Validate JSON before using jq
+  if ! echo "$copilot_output" | jq empty 2>/dev/null; then
+    echo -e "${RED}Invalid JSON returned from LLM for $file. Skipping analysis for this file.${NC}"
+    return
+  fi
+
+  local file_issues_found=false
   while IFS="|" read -r issue_type playful_message; do
     echo "Issue Found: $issue_type"
     sound_file="$sounds_dir/$issue_type.mp3"
@@ -90,14 +97,12 @@ handle_issue_type() {
     else
         echo -e "${YELLOW}No sound associated with issue type: $issue_type. Skipping playback.${NC}"
     fi
-    issues_found=true
+    file_issues_found=true
+    any_issues_found=true
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
-  if $issues_found; then
+  if $file_issues_found; then
     print_failure_graphic
-  else
-    play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in $file."
-    print_success_graphic
   fi
 }
 
@@ -164,14 +169,20 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
   process_batch
 fi
 
-echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
-
-read -r user_input < /dev/tty
-
-if [[ "$user_input" == "yes" ]]; then
+# After processing all files, play success sound/graphic if no issues found
+if ! $any_issues_found; then
+  play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
+  print_success_graphic
   echo -e "${GREEN}Proceeding with the commit...${NC}"
   exit 0
 else
-  echo -e "${RED}Commit aborted by the user.${NC}"
-  exit 1
+  echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
+  read -r user_input < /dev/tty
+  if [[ "$user_input" == "yes" ]]; then
+    echo -e "${GREEN}Proceeding with the commit...${NC}"
+    exit 0
+  else
+    echo -e "${RED}Commit aborted by the user.${NC}"
+    exit 1
+  fi
 fi
