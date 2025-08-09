@@ -41,7 +41,8 @@ else
 fi
 
 # Download sound files (using pairs in a flat array)
-mkdir -p sounds
+sounds_dir="$HOME/Downloads/commitedian-sounds"
+mkdir -p "$sounds_dir"
 echo "🎵 Downloading sound assets..."
 
 sound_list=(
@@ -55,7 +56,7 @@ sound_list=(
 for item in "${sound_list[@]}"; do
   name=$(echo "$item" | awk '{print $1}')
   url=$(echo  "$item" | awk '{print $2}')
-  dest="sounds/$name"
+  dest="$sounds_dir/$name"
 
   if [ ! -f "$dest" ]; then
     echo "  Downloading $dest"
@@ -63,6 +64,7 @@ for item in "${sound_list[@]}"; do
   else
     echo "  ✅ $dest already exists"
   fi
+
 done
 
 # Copy pre-commit hook to Git hooks directory
