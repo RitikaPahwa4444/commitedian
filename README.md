@@ -30,19 +30,24 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 
 ## How to Use It: Let the Roasting Begin 😎
 
-1. **Stage Your Changes**:
+1. **Reinitialise git**
+   ```bash
+   git init
+   ```
+
+2. **Stage Your Changes**:
    ```bash
    git add <files>
    ```
 
-2. **Try to Commit**:
+3. **Try to Commit**:
    ```bash
    git commit
    ```
    - If your code has issues, the hook will block the commit, play a sound, and roast you with a playful message.
    - Fix the issues and try again. Or don’t. Your call.
 
-3. **What to Expect**:
+4. **What to Expect**:
    - **Debug Logs?** A hearty laugh from the kids. Because, really?
    - **Hard-Coded Secrets?** Thunderstorm. Drama deserved.
    - **Typos and grammatical errors?** A silly chipmunks hehehei. Classic.
@@ -53,9 +58,8 @@ Commitedian performs as AI-powered code review and analyses your staged files. I
 - This hook is for macOS and uses `afplay` for sound playback. Sorry, Windows and Linux folks.
 
 ## License
-The script comes with an MIT License. Because sharing is caring.
-
-## Assets
+The scripts come with an MIT License. Because sharing is caring.
+### Assets
 
 The sound effects used in this project are sourced from Pixabay and are used under the Pixabay Content License. They are NOT covered by the MIT License.
 
