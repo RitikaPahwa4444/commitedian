@@ -8,6 +8,10 @@ Welcome to **Commitedian**, the pre-commit hook that gives your code a reality c
 
 Commitedian performs as AI-powered code review and analyses your staged files. It detects weird or verbose debug logs, hard-coded secrets, typos, and generic names, then roasts you with sounds and witty messages 😛
 
+## Trailer 🎬
+
+https://github.com/user-attachments/assets/b20a3b21-77c8-4789-a8d5-3cd357aa8b41
+
 ## Installation: Let the Fun Begin 😉
 
 1. **Clone This Repository**:
