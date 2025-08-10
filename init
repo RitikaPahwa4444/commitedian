@@ -73,7 +73,17 @@ if [ ! -d "$hooks_dir" ]; then
   echo "Creating Git hooks directory: $hooks_dir"
   mkdir -p "$hooks_dir"
 fi
-cp pre-commit "$hooks_dir/pre-commit"
-chmod +x "$hooks_dir/pre-commit"
+hooks_template_dir="$HOME/.git-templates/hooks"
+mkdir -p "$hooks_template_dir"
+cp pre-commit "$hooks_template_dir/pre-commit"
+chmod +x "$hooks_template_dir/pre-commit"
+
+echo "✅ Global pre-commit hook installed at $hooks_template_dir/pre-commit"
+
+git config --global init.templateDir "$HOME/.git-templates"
+echo "✅ Git global templateDir set to $HOME/.git-templates"
+
+echo "ℹ️  To apply the global hook to existing repositories, run: git init in each repo."
+
 
 echo "✅ Environment initialized successfully!"
