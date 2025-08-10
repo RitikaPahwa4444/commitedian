@@ -50,8 +50,9 @@ print_failure_graphic() {
 }
 
 print_welcome_banner
-issue_marker_dir="/tmp/commitedian_issues_$$"
-mkdir -p "$issue_marker_dir"
+issue_found=false
+issue_flag_file="/tmp/commitedian_issues_found_$$"
+rm -f "$issue_flag_file"
 
 # Function to play sound and display a message
 play_sound_and_message() {
@@ -104,7 +105,7 @@ handle_issue_type() {
   done < <(echo "$copilot_output" | jq -r '.[] | "\(.issue_type)|\(.playful_message)"')
 
   if $file_issues_found; then
-    touch "$issue_marker_dir/$file"
+    echo "$file" >> "$issue_flag_file"
   fi
 }
 
@@ -123,6 +124,9 @@ prompt="Review this code diff for the following issues:
         \"generic_name\"
     Only return valid json as output, no other text. If no issues are found, return an empty array: []
     Indicate the line of code (skip line number, point to actual code) and context of the issue in the playful message. Name the exact generic variable name used, typo made, grammatical error, or debug log message.
+    Ensure that you notice minus (-) and plus (+) signs in the code diff to identify changes. minus (-) indicates a line that was removed, and plus (+) indicates a line that was added.
+    If a bad line is removed (indicated by a minus sign), it should not be considered an issue. If a bad line is added (indicated by a plus sign), it should be considered an issue.
+    Do not signal an issue for lines which do not have any changes (i.e., no plus or minus signs in the beginning).
     CODE_DIFF: "
 
 # Analyze all staged files
@@ -146,7 +150,7 @@ process_file() {
     fi
     echo -e "${BLUE}Code diff for $file:\n$git_diff${NC}"
     final_prompt="$prompt\n$git_diff"
-    copilot_output=$(gh models run openai/gpt-4o-mini "$final_prompt")
+    copilot_output=$(gh models run openai/gpt-4.1 "$final_prompt")
     handle_issue_type "$file" "$copilot_output"
   fi
 }
@@ -170,24 +174,24 @@ if [ "${#file_batch[@]}" -gt 0 ]; then
   process_batch
 fi
 
-# After processing all files, check for issue marker files
-if [ "$(ls -A $issue_marker_dir)" ]; then
+# After processing all files, check if any issues were found
+if [ -s "$issue_flag_file" ]; then
   print_failure_graphic
   echo -e "${YELLOW}Do you want to proceed with the commit? (yes/no)${NC}"
   read -r user_input < /dev/tty
   if [[ "$user_input" == "yes" ]]; then
     echo -e "${GREEN}Proceeding with the commit...${NC}"
-    rm -rf "$issue_marker_dir"
+    rm -f "$issue_flag_file"
     exit 0
   else
     echo -e "${RED}Commit aborted by the user.${NC}"
-    rm -rf "$issue_marker_dir"
+    rm -f "$issue_flag_file"
     exit 1
   fi
 else
   print_success_graphic
   play_sound_and_message "$sounds_dir/applause.mp3" "Great job! No issues found in any staged file."
   echo -e "${GREEN}Proceeding with the commit...${NC}"
-  rm -rf "$issue_marker_dir"
+  rm -f "$issue_flag_file"
   exit 0
 fi
