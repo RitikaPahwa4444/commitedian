@@ -46,7 +46,7 @@ https://github.com/user-attachments/assets/b20a3b21-77c8-4789-a8d5-3cd357aa8b41
 
 3. **Try to Commit**:
    ```bash
-   git commit -m <commit-message>
+   git commit -m "your commit message"
    ```
    - If your code has issues, the hook will block the commit, play a sound, and roast you with a playful message.
    - Fix the issues and try again. Or don’t. Your call.
