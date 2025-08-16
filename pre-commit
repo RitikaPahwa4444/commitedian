@@ -32,7 +32,7 @@ print_success_graphic() {
   echo -e "${BLUE}    | |    |  __  |    | |      _  ${NC}"
   echo -e "${BLUE}    |_|    |_|  |_|    |_|     |_| ${NC}"
   echo -e ""                                                    
-  echo -e "${GREEN}======= 🎉🎉 SUCCESS! 🎉🎉 ====== ${NC}"
+  echo -e "${GREEN}======= 🎉🎉🎉 SUCCESS! 🎉🎉🎉 ====== ${NC}"
   echo -e "${GREEN}Your code is clean and ready to commit!${NC}"
 }
 
