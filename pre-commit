@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Smart pre-commit hook leveraging GitHub Copilot CLI for AI-powered code review with playful feedback
-# Ensure GitHub CLI and Copilot CLI extension are installed
 # Add colorful output and graphics
 GREEN="\033[0;32m"
 RED="\033[0;31m"
@@ -33,7 +32,7 @@ print_success_graphic() {
   echo -e "${BLUE}    | |    |  __  |    | |      _  ${NC}"
   echo -e "${BLUE}    |_|    |_|  |_|    |_|     |_| ${NC}"
   echo -e ""                                                    
-  echo -e "${GREEN}======= 🎉🎉🎉 SUCCESS! 🎉🎉🎉 ====== ${NC}"
+  echo -e "${GREEN}======= 🎉🎉 SUCCESS! 🎉🎉 ====== ${NC}"
   echo -e "${GREEN}Your code is clean and ready to commit!${NC}"
 }
 
@@ -83,8 +82,6 @@ handle_issue_type() {
 
   # Sanitize copilot_output by removing ```json and ``` markers
   copilot_output=$(echo "$copilot_output" | sed 's/^```json//' | sed 's/```$//')
-
-  echo "$copilot_output"
 
   # Validate JSON before using jq
   if ! echo "$copilot_output" | jq empty 2>/dev/null; then
